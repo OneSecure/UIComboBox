@@ -22,7 +22,6 @@
 @interface UIComboBox<ObjectType> : UIControl
 @property(nonatomic, strong) NSArray<ObjectType> *entries;
 @property(nonatomic, assign) NSInteger selectedItem;
-@property(nonatomic, assign) BOOL tableViewOnAbove;
 @property(nonatomic, assign) BOOL editable;
 @property(nonatomic, strong) void (^onItemSelected)(ObjectType selectedObject, NSInteger selectedIndex);
 @property(nonatomic, strong) void (^onItemDeleted)(ObjectType deletedObject, NSInteger deletedIndex);

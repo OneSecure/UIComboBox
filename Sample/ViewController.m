@@ -38,6 +38,7 @@
 @implementation ViewController {
     __weak IBOutlet UIComboBox *_myComboBox;
     __weak IBOutlet UITableView *_tableView;
+    __weak IBOutlet UIComboBox *_bottomComboBox;
 }
 
 - (instancetype) initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
@@ -72,7 +73,7 @@
     [box setOnItemSelected:^(NSString *selectedObject, NSInteger selectedIndex) {
         NSLog(@"select changed to %ld", (long)selectedIndex);
     }];
-    box.entries = @[@"xxxx", @"yyyy", @"zzzz", @"hhhh", @"wwww", @"aaaaa", @"bbbb"];
+    box.entries = @[@"xxxx", @"yyyy", @"zzzz", @"hhhh", @"wwww", @"aaaaa", @"bbbb", @"xxxx", @"yyyy", @"zzzz", @"hhhh", @"wwww", @"aaaaa", @"bbbb", @"xxxx", @"yyyy", @"zzzz", @"hhhh", @"wwww", @"aaaaa", @"bbbb", ];
     box.selectedItem = 5;
 
     [self.view addSubview:box];
@@ -81,6 +82,17 @@
     _tableView.layer.borderWidth = .5;
     _tableView.layer.cornerRadius = 5;
     _tableView.dataSource = self;
+
+    _bottomComboBox.backgroundColor = [UIColor whiteColor];
+    _bottomComboBox.entries = @[@"red", @"blue", @"yellow", @"green", @"red", @"blue", @"yellow", @"green", @"red", @"blue", @"yellow", @"green", @"red", @"blue", @"yellow", @"green", ];
+    _bottomComboBox.selectedItem = 1;
+    [_bottomComboBox setOnItemSelected:^(NSString *selectedObject, NSInteger selectedIndex) {
+        NSLog(@"%@ selectd and index is %ld", selectedObject, (long)selectedIndex);
+    }];
+    _bottomComboBox.editable = YES;
+    [_bottomComboBox setOnItemDeleted:^(NSString *deletedObject, NSInteger deletedIndex) {
+        NSLog(@"%@ deleted and index is %ld", deletedObject, (long)deletedIndex);
+    }];
 }
 
 - (void) viewDidLayoutSubviews {
@@ -108,7 +120,7 @@
     someTypeCell.selectedIndex = indexPath.row;
     someTypeCell.title = NSLocalizedString(@"Something type", nil);
     someTypeCell.selectChanged = ^(SomeObject *obj, NSInteger selected) {
-        NSLog(@"selectChanged %@, selected=%ld", obj, selected);
+        NSLog(@"selectChanged %@, selected=%ld", obj, (long)selected);
     };
     return someTypeCell;
 }
@@ -116,7 +128,7 @@
 - (NSArray<SomeObject *> *) serverTypeCollection:(NSInteger)row {
     NSMutableArray<SomeObject *> *result = [[NSMutableArray alloc] init];
     for (int i=0; i<5; ++i) {
-        NSString *txt = [NSString stringWithFormat:@"row=%ld item=%d", row, i];
+        NSString *txt = [NSString stringWithFormat:@"row=%ld item=%d", (long)row, i];
         UIImage *img = [UIImage imageNamed:[NSString stringWithFormat:@"image%d", i]];
         [result addObject:[[SomeObject alloc] initWithText:txt image:img]];
     }

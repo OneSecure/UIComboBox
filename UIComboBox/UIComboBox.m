@@ -8,9 +8,9 @@
 
 #import "UIComboBox.h"
 
-#define __USING_ANIMATE__ 0
+#define __USING_ANIMATE__ 1
 
-static const CGFloat kComboBoxItemHeight = 32.0;
+static const NSTimeInterval kAnimateInerval = 0.2;
 
 //========================== PassthroughView =============================================
 
@@ -163,12 +163,13 @@ static const CGFloat kComboBoxItemHeight = 32.0;
 @end
 
 @implementation UIComboBox {
-    ImageTextView *_textLabel;
-    UIImageView *_rightView;
+    __weak ImageTextView *_textLabel;
+    __weak UIImageView *_rightView;
     UITableView *_internalTableView;
-    CGRect _cachedTableViewFrame;
     PassthroughView *_passthroughView;
-
+    BOOL _tableViewOnAbove;
+    NSDate *_tapMoment;
+    
     NSMutableArray *_entries;
 }
 
@@ -202,9 +203,7 @@ static const CGFloat kComboBoxItemHeight = 32.0;
     if (entries) {
         [_entries addObjectsFromArray:entries];
     }
-    if (_internalTableView) {
-        [_internalTableView reloadData];
-    }
+    [_internalTableView reloadData];
 }
 
 - (NSArray *) entries {
@@ -268,9 +267,7 @@ static const CGFloat kComboBoxItemHeight = 32.0;
 
 - (void) setFont:(UIFont *)font {
     _textLabel.font = font;
-    if (_internalTableView) {
-        [_internalTableView reloadData];
-    }
+    [_internalTableView reloadData];
 }
 
 - (void) appendObject:(id)object {
@@ -293,19 +290,22 @@ static const CGFloat kComboBoxItemHeight = 32.0;
     self.layer.borderWidth = .5;
     _borderColor = [UIColor colorWithCGColor:self.layer.borderColor];
 
-    _textLabel = [[ImageTextView alloc] initWithFrame:CGRectMake(0, 0, 100, 30)];
-    _textLabel.textAlignment = NSTextAlignmentCenter;
-    _textLabel.backgroundColor = [UIColor clearColor];
-    [self addSubview:_textLabel];
+    ImageTextView *textLabel = [[ImageTextView alloc] initWithFrame:CGRectMake(0, 0, 100, 30)];
+    textLabel.textAlignment = NSTextAlignmentCenter;
+    textLabel.backgroundColor = [UIColor clearColor];
+    [self addSubview:textLabel];
+    _textLabel = textLabel;
 
-    _rightView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"combobox_down"]];
-    _rightView.highlightedImage = [UIImage imageNamed:@"combobox_down_highlighed"];
-    [self addSubview:_rightView];
+    UIImageView *rightView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"combobox_down"]];
+    rightView.highlightedImage = [UIImage imageNamed:@"combobox_down_highlighed"];
+    [self addSubview:rightView];
+    _rightView = rightView;
 
-    [self addTarget:self action:@selector(tapHandle) forControlEvents:UIControlEventTouchUpInside];
     self.userInteractionEnabled = YES;
 
     _entries = [[NSMutableArray alloc] init];
+    
+    _tapMoment = [NSDate date];
 }
 
 - (void) layoutSubviews {
@@ -320,32 +320,17 @@ static const CGFloat kComboBoxItemHeight = 32.0;
     CGRect rcLabel = rc;
     rcLabel.size.width = rc.size.width - rcRight.size.width;
 
-    rcLabel = CGRectInset(rcLabel, 3, 3);
-    rcRight = CGRectInset(rcRight, 3, 3);
+    rcLabel = CGRectInset(rcLabel, 2, 2);
+    rcRight = CGRectInset(rcRight, 2, 2);
 
     _textLabel.frame = rcLabel;
     _rightView.frame = rcRight;
 }
 
-- (void) adjustPopupViewFrame {
-    CGRect frame = self.frame;
-    frame.origin.y += self.frame.size.height + 2.0;
-    frame.size.height = 0.0;
-
-    if (_tableViewOnAbove) {
-        frame.origin.y = self.frame.origin.y - 2.0 - [self _internalListViewHeight];
-    }
-
-    _internalTableView.frame = frame;
-    _cachedTableViewFrame = frame;
-}
-
 - (UIView *) hitTest:(CGPoint)point withEvent:(UIEvent *)event {
     if (self.enabled) {
-        if (CGRectContainsPoint(_textLabel.frame, point)) {
-            if (_internalTableView.superview == nil) {
-                [self tapHandle];
-            }
+        if (CGRectContainsPoint(_textLabel.frame, point) || CGRectContainsPoint(_rightView.frame, point)) {
+            [self tapHandle];
         }
     }
     return [super hitTest:point withEvent:event];
@@ -365,22 +350,29 @@ static const CGFloat kComboBoxItemHeight = 32.0;
         _internalTableView = tableView;
     }
 
-    [self adjustPopupViewFrame];
-
     if (_internalTableView.superview == nil) {
+        NSDate *current = [NSDate date];
+        if ([current timeIntervalSinceDate:_tapMoment] < kAnimateInerval) {
+            return;
+        }
+        _tapMoment = current;
+
         _rightView.image = [UIImage imageNamed:@"combobox_up"];
         _rightView.highlightedImage = [UIImage imageNamed:@"combobox_up_highlighed"];
 
-        CGRect frame = [self.superview convertRect:_cachedTableViewFrame toView:topView];
-        _rightView.frame = frame;
-
-        frame.size.height = [self _internalListViewHeight];
-
+        CGRect frame = [self calcTableViewRect];
+        
         [topView addSubview:_internalTableView];
 
 #if __USING_ANIMATE__
-        [UIView animateWithDuration:0.5 animations:^{
-            _internalTableView.frame = frame;
+        CGRect initRc = frame;
+        if (_tableViewOnAbove) {
+            initRc.origin.y += initRc.size.height;
+        }
+        initRc.size.height = 0;
+        _internalTableView.frame = initRc;
+        [UIView animateWithDuration:kAnimateInerval animations:^{
+            self->_internalTableView.frame = frame;
         } completion:^(BOOL finished) {
             //
         }];
@@ -436,11 +428,8 @@ static const CGFloat kComboBoxItemHeight = 32.0;
     return [_entries count];
 }
 
-
-static const CGFloat kTableViewCellHeight = 32.0f;
-
 - (CGFloat) tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return kTableViewCellHeight;
+    return self.frame.size.height;
 }
 
 - (UITableViewCell*) tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -507,13 +496,22 @@ static const CGFloat kTableViewCellHeight = 32.0f;
 
 - (void) doClearup {
 #if __USING_ANIMATE__
-    [UIView animateWithDuration:0.5 animations:^{
-        CGRect frame = _internalTableView.frame;
-        frame.size.height = 0.0;
-        _internalTableView.frame = frame;
+    NSDate *current = [NSDate date];
+    if ([current timeIntervalSinceDate:_tapMoment] < kAnimateInerval) {
+        return;
+    }
+    _tapMoment = current;
+    
+    CGRect frame = _internalTableView.frame;
+    if (_tableViewOnAbove) {
+        frame.origin.y += frame.size.height;
+    }
+    frame.size.height = 0.0;
+    [UIView animateWithDuration:kAnimateInerval animations:^{
+        self->_internalTableView.frame = frame;
     } completion:^(BOOL finished) {
-        [_internalTableView removeFromSuperview];
-        [_passthroughView removeFromSuperview];
+        [self->_internalTableView removeFromSuperview];
+        [self->_passthroughView removeFromSuperview];
     }];
 #else
     [_internalTableView removeFromSuperview];
@@ -523,15 +521,43 @@ static const CGFloat kTableViewCellHeight = 32.0f;
     _rightView.highlightedImage = [UIImage imageNamed:@"combobox_down_highlighed"];
 }
 
-- (CGFloat) _internalListViewHeight {
+- (CGRect) calcTableViewRect {
+    static const CGFloat gapOfViews = 2.0;
+    UIView *topView = [UIComboBox topMostView:self];
+    CGFloat screenHeight = topView.frame.size.height;
+    CGRect rc = self.frame;
+    rc = [self.superview convertRect:rc toView:topView];
+    
+    CGFloat topLine = rc.origin.y - gapOfViews;
+    CGFloat bottomLine = rc.origin.y + rc.size.height + gapOfViews;
+    
     NSInteger count = [_internalTableView numberOfRowsInSection:0];
     if (count < 1) {
         count = 1;
     }
-    if (count > 5) {
-        count = 5;
+    CGFloat tableViewMaxHeight = count * self.frame.size.height;
+    CGFloat statusBarHeight = [UIComboBox statusBarHeight];
+    
+    _tableViewOnAbove = NO;
+    
+    if (bottomLine + tableViewMaxHeight < screenHeight) {
+        rc.origin.y = bottomLine;
+        rc.size.height = tableViewMaxHeight;
+    } else if (topLine - tableViewMaxHeight >= statusBarHeight) {
+        rc.origin.y = topLine - tableViewMaxHeight;
+        rc.size.height = tableViewMaxHeight;
+        _tableViewOnAbove = YES;
+    } else {
+        if ((topLine - statusBarHeight) > (screenHeight - bottomLine)) {
+            rc.origin.y = statusBarHeight + gapOfViews;
+            rc.size.height = topLine - (statusBarHeight + gapOfViews);
+            _tableViewOnAbove = YES;
+        } else {
+            rc.origin.y = bottomLine;
+            rc.size.height = screenHeight - gapOfViews - bottomLine;
+        }
     }
-    return (CGFloat) count * kComboBoxItemHeight;
+    return rc;
 }
 
 #pragma mark -
@@ -545,5 +571,8 @@ static const CGFloat kTableViewCellHeight = 32.0f;
     }
 }
 
++ (CGFloat) statusBarHeight {
+    return [UIApplication sharedApplication].statusBarFrame.size.height;
+}
 
 @end
