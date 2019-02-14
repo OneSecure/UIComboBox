@@ -27,5 +27,7 @@
 @property(nonatomic, strong) void (^onItemDeleted)(ObjectType deletedObject, NSInteger deletedIndex);
 @property(nonatomic, strong) UIColor *borderColor;
 @property(nonatomic, strong) UIFont *font;
+@property(nonatomic, strong) UIColor *textColor;
+@property(nonatomic, assign) BOOL showArrow;
 - (void) appendObject:(ObjectType)object;
 @end

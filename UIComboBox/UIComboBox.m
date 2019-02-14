@@ -270,6 +270,20 @@ static const NSTimeInterval kAnimateInerval = 0.2;
     [_internalTableView reloadData];
 }
 
+- (UIColor *) textColor {
+    return _textLabel.textColor;
+}
+
+- (void) setTextColor:(UIColor *)textColor {
+    _textLabel.textColor = textColor;
+    [_internalTableView reloadData];
+}
+
+- (void) setShowArrow:(BOOL)showArrow {
+    _showArrow = showArrow;
+    [self layoutIfNeeded];
+}
+
 - (void) appendObject:(id)object {
     NSAssert(object, @"nil object");
     if (object) {
@@ -306,6 +320,8 @@ static const NSTimeInterval kAnimateInerval = 0.2;
     _entries = [[NSMutableArray alloc] init];
     
     _tapMoment = [NSDate date];
+    
+    _showArrow = YES;
 }
 
 - (void) layoutSubviews {
@@ -313,18 +329,23 @@ static const NSTimeInterval kAnimateInerval = 0.2;
 
     CGRect rc = CGRectZero; rc.size = self.frame.size;
 
-    CGRect rcRight = rc;
-    rcRight.size.width = rc.size.height;
-    rcRight.origin.x = rc.origin.x + rc.size.width -rcRight.size.width;
+    if (_showArrow) {
+        CGRect rcRight = rc;
+        rcRight.size.width = rc.size.height;
+        rcRight.origin.x = rc.origin.x + rc.size.width -rcRight.size.width;
 
-    CGRect rcLabel = rc;
-    rcLabel.size.width = rc.size.width - rcRight.size.width;
+        CGRect rcLabel = rc;
+        rcLabel.size.width = rc.size.width - rcRight.size.width;
 
-    rcLabel = CGRectInset(rcLabel, 2, 2);
-    rcRight = CGRectInset(rcRight, 2, 2);
+        rcLabel = CGRectInset(rcLabel, 2, 2);
+        rcRight = CGRectInset(rcRight, 2, 2);
 
-    _textLabel.frame = rcLabel;
-    _rightView.frame = rcRight;
+        _textLabel.frame = rcLabel;
+        _rightView.frame = rcRight;
+    } else {
+        _textLabel.frame = rc;
+        _rightView.frame = CGRectZero;
+    }
 }
 
 - (UIView *) hitTest:(CGPoint)point withEvent:(UIEvent *)event {
@@ -346,8 +367,13 @@ static const NSTimeInterval kAnimateInerval = 0.2;
         [tableView setDataSource:self];
         tableView.layer.cornerRadius = 7.;
         tableView.layer.borderWidth = .5;
-        tableView.layer.borderColor = self.borderColor.CGColor;
         _internalTableView = tableView;
+    }
+    
+    if ([_borderColor isEqual:[UIColor whiteColor]]) {
+        _internalTableView.layer.borderColor = [UIColor blackColor].CGColor;
+    } else {
+        _internalTableView.layer.borderColor = _borderColor.CGColor;
     }
 
     if (_internalTableView.superview == nil) {
@@ -446,6 +472,8 @@ static const NSTimeInterval kAnimateInerval = 0.2;
     if ([obj respondsToSelector:@selector(description)]) {
         NSString *text = [obj performSelector:@selector(description)];
         cell.textLabel.text = (text.length != 0) ? text : @"(NULL)";
+        cell.textLabel.textColor = _textLabel.textColor;
+        cell.textLabel.textAlignment = NSTextAlignmentCenter;
     }
     if ([obj respondsToSelector:@selector(image)]) {
         cell.imageView.image = [obj performSelector:@selector(image)];
