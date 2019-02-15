@@ -346,6 +346,8 @@ static const NSTimeInterval kAnimateInerval = 0.2;
         _textLabel.frame = rc;
         _rightView.frame = CGRectZero;
     }
+
+    _passthroughView.frame = [UIScreen mainScreen].bounds;
 }
 
 - (UIView *) hitTest:(CGPoint)point withEvent:(UIEvent *)event {
