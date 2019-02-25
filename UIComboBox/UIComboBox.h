@@ -8,6 +8,10 @@
 
 #import <UIKit/UIKit.h>
 
+@interface NSArray (safeArray)
+- (id) safe_objectAtIndex:(NSUInteger)index;
+@end
+
 @interface ImageTextView : UIView
 @property(nonatomic, strong) NSString *text;
 @property(nonatomic, strong) UIImage *image;

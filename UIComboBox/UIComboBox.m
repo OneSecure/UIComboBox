@@ -8,6 +8,15 @@
 
 #import "UIComboBox.h"
 
+@implementation NSArray (safeArray)
+- (id) safe_objectAtIndex:(NSUInteger)index {
+    if ((0 <= index) && (index < self.count)) {
+        return [self objectAtIndex:index];
+    }
+    return nil;
+}
+@end
+
 #define __USING_ANIMATE__ 1
 
 static const NSTimeInterval kAnimateInerval = 0.2;
@@ -210,16 +219,10 @@ static const NSTimeInterval kAnimateInerval = 0.2;
     return _entries;
 }
 
-- (void) adjustSelectedItem {
-    NSInteger maxIndex = ((NSInteger) _entries.count) - 1;
-    if (_selectedItem < 0) {
-        _selectedItem = 0;
-    } else if (_selectedItem > maxIndex) {
-        _selectedItem = MAX(maxIndex, 0);
-    }
-}
-
 - (void) setSelectedItem:(NSInteger)selectedItem {
+    if (_selectedItem == selectedItem) {
+        return;
+    }
     _selectedItem = selectedItem;
     if (_entries.count == 0) {
         _textLabel.text = nil;
@@ -227,9 +230,10 @@ static const NSTimeInterval kAnimateInerval = 0.2;
         return;
     }
 
-    [self adjustSelectedItem];
-
-    id obj = _entries[_selectedItem];
+    id obj = [_entries safe_objectAtIndex:_selectedItem];
+    if (obj == nil) {
+        return;
+    }
 
     NSString *text = nil;
     if ([obj respondsToSelector:@selector(description)]) {
@@ -322,6 +326,8 @@ static const NSTimeInterval kAnimateInerval = 0.2;
     _tapMoment = [NSDate date];
     
     _showArrow = YES;
+    
+    _selectedItem = -1;
 }
 
 - (void) layoutSubviews {
@@ -408,10 +414,8 @@ static const NSTimeInterval kAnimateInerval = 0.2;
         _internalTableView.frame = frame;
 #endif
 
-        [self adjustSelectedItem];
-
-        NSIndexPath *path = [NSIndexPath indexPathForRow:_selectedItem inSection:0];
-        if (_entries.count) {
+        if (_entries.count && ([_entries safe_objectAtIndex:_selectedItem] != nil)) {
+            NSIndexPath *path = [NSIndexPath indexPathForRow:_selectedItem inSection:0];
             [_internalTableView selectRowAtIndexPath:path
                                             animated:YES
                                       scrollPosition:UITableViewScrollPositionMiddle];
