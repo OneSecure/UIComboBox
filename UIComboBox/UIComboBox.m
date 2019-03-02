@@ -414,7 +414,7 @@ static const NSTimeInterval kAnimateInerval = 0.2;
         _internalTableView.frame = frame;
 #endif
 
-        if (_entries.count && ([_entries safe_objectAtIndex:_selectedItem] != nil)) {
+        if ([_entries safe_objectAtIndex:_selectedItem] != nil) {
             NSIndexPath *path = [NSIndexPath indexPathForRow:_selectedItem inSection:0];
             [_internalTableView selectRowAtIndexPath:path
                                             animated:YES
@@ -471,7 +471,7 @@ static const NSTimeInterval kAnimateInerval = 0.2;
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
     }
 
-    cell.textLabel.font = _textLabel.font;
+    cell.textLabel.font = self.font;
 
     id obj = [_entries objectAtIndex:[indexPath row] ];
 
@@ -559,7 +559,9 @@ static const NSTimeInterval kAnimateInerval = 0.2;
     static const CGFloat gapOfViews = 2.0;
     UIView *topView = [UIComboBox topMostView:self];
     CGFloat screenHeight = topView.frame.size.height;
+    CGFloat screenWidth = topView.frame.size.width;
     CGRect rc = self.frame;
+    CGFloat selfHeight = rc.size.height;
     rc = [self.superview convertRect:rc toView:topView];
     
     CGFloat topLine = rc.origin.y - gapOfViews;
@@ -590,6 +592,39 @@ static const NSTimeInterval kAnimateInerval = 0.2;
             rc.origin.y = bottomLine;
             rc.size.height = screenHeight - gapOfViews - bottomLine;
         }
+    }
+    
+    CGFloat gapInCell = 15.0;
+    CGFloat imgW = 0;
+    CGFloat txtW = 0;
+    for (id obj in _entries) {
+        if (imgW == 0) {
+            if ([obj respondsToSelector:@selector(image)]) {
+                imgW = selfHeight - 2.5 * 2 + gapInCell;
+            }
+        }
+        
+        if ([obj respondsToSelector:@selector(description)]) {
+            NSString *text = [obj performSelector:@selector(description)];
+            text = (text.length != 0) ? [text stringByAppendingString:@"A"] : @"(NULL)A";
+            CGSize size = [text sizeWithAttributes: @{NSFontAttributeName:self.font}];
+            txtW = MAX(size.width, txtW);
+        }
+    }
+    CGFloat widthNeeded = gapInCell + imgW + txtW + gapInCell;
+    
+    CGFloat alignLeftWidthMax = screenWidth - gapOfViews - rc.origin.x;
+    CGFloat alignRightWidthMax = rc.origin.x + rc.size.width - gapOfViews;
+    
+    if (widthNeeded <= rc.size.width) {
+        return rc;
+    }
+    if (alignLeftWidthMax >= alignRightWidthMax) {
+        rc.size.width = (alignLeftWidthMax >= widthNeeded) ? widthNeeded : alignLeftWidthMax;
+    } else {
+        CGFloat finalWidth = (alignRightWidthMax >= widthNeeded) ? widthNeeded : alignRightWidthMax;
+        rc.origin.x = rc.origin.x + rc.size.width - finalWidth;
+        rc.size.width = finalWidth;
     }
     return rc;
 }

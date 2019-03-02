@@ -15,7 +15,6 @@
 #define kSeparatorBegin  101
 #define kValueLabelBegin 110
 #define kNameLabelWidth  90
-#define kLabelHeight     32
 
 
 @implementation ComboBoxCell {
@@ -96,12 +95,13 @@
 - (void) layoutSubviews {
     [super layoutSubviews];
     CGRect frame = self.contentView.frame;
-    CGFloat yBegin = (frame.size.height-kLabelHeight)/2;
+    CGFloat yBegin = 2.0;
+    CGFloat yLabelHeight = frame.size.height - 2 * yBegin;
     
     CGSize titleSize = [_titleLabel.text sizeWithAttributes: @{NSFontAttributeName:_titleLabel.font}];
     
-    _titleLabel.frame = CGRectMake(kNameLabelBegin, yBegin, titleSize.width, kLabelHeight);
-    _comboBox.frame = CGRectMake(kNameLabelBegin * 2 + titleSize.width, yBegin, frame.size.width - titleSize.width - kNameLabelBegin*3, kLabelHeight);
+    _titleLabel.frame = CGRectMake(kNameLabelBegin, yBegin, titleSize.width, yLabelHeight);
+    _comboBox.frame = CGRectMake(kNameLabelBegin * 2 + titleSize.width, yBegin, frame.size.width - titleSize.width - kNameLabelBegin*3, yLabelHeight);
 }
 
 @end

@@ -32,7 +32,7 @@
 
 @end
 
-@interface ViewController () <UITableViewDataSource>
+@interface ViewController () <UITableViewDataSource, UITableViewDelegate>
 @end
 
 @implementation ViewController {
@@ -73,7 +73,7 @@
     [box setOnItemSelected:^(NSString *selectedObject, NSInteger selectedIndex) {
         NSLog(@"select changed to %ld", (long)selectedIndex);
     }];
-    box.entries = @[@"xxxx", @"yyyy", @"zzzz", @"hhhh", @"wwww", @"aaaaa", @"bbbb", @"xxxx", @"yyyy", @"zzzz", @"hhhh", @"wwww", @"aaaaa", @"bbbb", @"xxxx", @"yyyy", @"zzzz", @"hhhh", @"wwww", @"aaaaa", @"bbbb", ];
+    box.entries = @[@"xxxx", @"yyyyabcdefghijklmnopqrst", @"zzzz", @"hhhh", @"wwww", @"aaaaa", @"bbbb", @"xxxx", @"yyyy", @"zzzz", @"hhhh", @"wwww", @"aaaaa", @"bbbb", @"xxxx", @"yyyy", @"zzzz", @"hhhh", @"wwww", @"aaaaa", @"bbbb", ];
     box.selectedItem = 5;
 
     [self.view addSubview:box];
@@ -82,6 +82,7 @@
     _tableView.layer.borderWidth = .5;
     _tableView.layer.cornerRadius = 5;
     _tableView.dataSource = self;
+    _tableView.delegate = self;
 
     _bottomComboBox.backgroundColor = [UIColor whiteColor];
     _bottomComboBox.entries = @[@"red", @"blue", @"yellow", @"green", @"red", @"blue", @"yellow", @"green", @"red", @"blue", @"yellow", @"green", @"red", @"blue", @"yellow", @"green", ];
@@ -114,6 +115,10 @@
     return 2;
 }
 
+- (CGFloat) tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return 48;
+}
+
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     ComboBoxCell<SomeObject *> *someTypeCell = [[ComboBoxCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
     someTypeCell.entries = [self serverTypeCollection:indexPath.row];
@@ -129,6 +134,9 @@
     NSMutableArray<SomeObject *> *result = [[NSMutableArray alloc] init];
     for (int i=0; i<5; ++i) {
         NSString *txt = [NSString stringWithFormat:@"row=%ld item=%d", (long)row, i];
+        if (i==3) {
+            txt = [NSString stringWithFormat:@"row=%ld item=%d opqrstuvwxyz1234567890", (long)row, i];
+        }
         UIImage *img = [UIImage imageNamed:[NSString stringWithFormat:@"image%d", i]];
         [result addObject:[[SomeObject alloc] initWithText:txt image:img]];
     }
