@@ -651,7 +651,21 @@ static const NSTimeInterval kAnimateInerval = 0.2;
 }
 
 + (CGFloat) statusBarHeight {
+#if 1
+    Class appClass = NSClassFromString(@"UIApplication");
+    if (appClass) {
+        UIApplication *app = [appClass performSelector:@selector(sharedApplication)];
+        if (app) {
+            IMP imp = [app methodForSelector:@selector(statusBarFrame)];
+            CGRect (*func)(id, SEL) = (void *)imp;
+            CGRect rc = func(app, @selector(statusBarFrame));
+            return rc.size.height;
+        }
+    }
+    return 0;
+#else
     return [UIApplication sharedApplication].statusBarFrame.size.height;
+#endif
 }
 
 @end
