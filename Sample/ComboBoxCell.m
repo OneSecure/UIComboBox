@@ -7,7 +7,7 @@
 //
 
 #import "ComboBoxCell.h"
-#import "UIComboBox.h"
+#import <UIComboBox/UIComboBox.h>
 
 #define kControlFontSize 13
 

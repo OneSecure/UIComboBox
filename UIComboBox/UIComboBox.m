@@ -227,7 +227,11 @@ static const NSTimeInterval kAnimateInerval = 0.2;
     if (_entries.count == 0) {
         _textLabel.text = nil;
         _textLabel.image = nil;
+        NSAssert(_selectedItem == -1, @"_selectedItem == -1");
         return;
+    }
+    if (_selectedItem < 0) {
+        _selectedItem = 0;
     }
 
     id obj = [_entries safe_objectAtIndex:_selectedItem];
@@ -303,6 +307,12 @@ static const NSTimeInterval kAnimateInerval = 0.2;
     }
 }
 
+- (UIImage *) bundleImageNamed:(NSString *)name {
+    return [UIImage imageNamed:name
+                      inBundle:[NSBundle bundleForClass:self.class]
+ compatibleWithTraitCollection:nil];
+}
+
 - (void) initSubviews {
     self.layer.cornerRadius = 7.;
     self.layer.borderWidth = .5;
@@ -314,8 +324,8 @@ static const NSTimeInterval kAnimateInerval = 0.2;
     [self addSubview:textLabel];
     _textLabel = textLabel;
 
-    UIImageView *rightView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"combobox_down"]];
-    rightView.highlightedImage = [UIImage imageNamed:@"combobox_down_highlighed"];
+    UIImageView *rightView = [[UIImageView alloc] initWithImage:[self bundleImageNamed:@"combobox_down"]];
+    rightView.highlightedImage = [self bundleImageNamed:@"combobox_down_highlighed"];
     [self addSubview:rightView];
     _rightView = rightView;
 
@@ -391,8 +401,8 @@ static const NSTimeInterval kAnimateInerval = 0.2;
         }
         _tapMoment = current;
 
-        _rightView.image = [UIImage imageNamed:@"combobox_up"];
-        _rightView.highlightedImage = [UIImage imageNamed:@"combobox_up_highlighed"];
+        _rightView.image = [self bundleImageNamed:@"combobox_up"];
+        _rightView.highlightedImage = [self bundleImageNamed:@"combobox_up_highlighed"];
 
         CGRect frame = [self calcTableViewRect];
         
@@ -551,8 +561,8 @@ static const NSTimeInterval kAnimateInerval = 0.2;
     [_internalTableView removeFromSuperview];
     [_passthroughView removeFromSuperview];
 #endif
-    _rightView.image = [UIImage imageNamed:@"combobox_down"];
-    _rightView.highlightedImage = [UIImage imageNamed:@"combobox_down_highlighed"];
+    _rightView.image = [self bundleImageNamed:@"combobox_down"];
+    _rightView.highlightedImage = [self bundleImageNamed:@"combobox_down_highlighed"];
 }
 
 - (CGRect) calcTableViewRect {

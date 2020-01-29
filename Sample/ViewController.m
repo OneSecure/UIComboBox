@@ -7,7 +7,7 @@
 //
 
 #import "ViewController.h"
-#import "UIComboBox.h"
+#import <UIComboBox/UIComboBox.h>
 #import "ComboBoxCell.h"
 
 @interface SomeObject : NSObject
