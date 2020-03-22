@@ -259,7 +259,13 @@ static const NSTimeInterval kAnimateInerval = 0.2;
 
 - (void) setEnabled:(BOOL)enabled {
     //_textLabel.textLabel.enabled = enabled;
-    _textLabel.textColor = enabled?[UIColor blackColor]:[UIColor grayColor];
+    if (self.isDarkMode) {
+        if (@available(iOS 13.0, *)) {
+            _textLabel.textColor = [UIColor lightTextColor];
+        }
+    } else {
+        _textLabel.textColor = enabled?[UIColor blackColor]:[UIColor grayColor];
+    }
     _rightView.highlighted = !enabled;
     [super setEnabled:enabled];
 }
@@ -311,6 +317,13 @@ static const NSTimeInterval kAnimateInerval = 0.2;
     return [UIImage imageNamed:name
                       inBundle:[NSBundle bundleForClass:self.class]
  compatibleWithTraitCollection:nil];
+}
+
+- (BOOL) isDarkMode {
+    if (@available(iOS 13.0, *)) {
+        return (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark);
+    }
+    return NO;
 }
 
 - (void) initSubviews {
@@ -482,6 +495,12 @@ static const NSTimeInterval kAnimateInerval = 0.2;
     }
 
     cell.textLabel.font = self.font;
+    
+    if (self.isDarkMode) {
+        cell.backgroundColor = [UIColor colorWithRed:.2 green:.2 blue:.2 alpha:.5];
+    } else {
+        cell.backgroundColor = [UIColor whiteColor];
+    }
 
     id obj = [_entries objectAtIndex:[indexPath row] ];
 
@@ -536,6 +555,13 @@ static const NSTimeInterval kAnimateInerval = 0.2;
     if (_onItemSelected) {
         _onItemSelected(_entries[selectedItem], selectedItem);
     }
+}
+
+- (void) traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    [super traitCollectionDidChange:previousTraitCollection];
+    [self setEnabled:self.enabled];
+    [_internalTableView reloadData];
+    [self setSelectedItem:self.selectedItem];
 }
 
 - (void) doClearup {
